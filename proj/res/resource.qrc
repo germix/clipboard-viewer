@@ -1,0 +1,12 @@
+<RCC>
+    <qresource prefix="/">
+        <file>MainImage.png</file>
+        <file>action-clear.png</file>
+        <file>action-refresh.png</file>
+        <file>file-exit.png</file>
+        <file>help-about.png</file>
+        <file>status-warning.png</file>
+        <file>action-auto-refresh.png</file>
+        <file>menu-languages.png</file>
+    </qresource>
+</RCC>

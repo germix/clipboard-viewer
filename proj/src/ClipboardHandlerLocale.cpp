@@ -1,0 +1,351 @@
+#if 1
+#include "ClipboardHandler.h"
+#include <windows.h>
+#include <QTextEdit>
+
+//
+// https://msdn.microsoft.com/en-us/library/windows/desktop/dd318101(v=vs.85).aspx
+// https://github.com/tpn/winsdk-10/blob/master/Include/10.0.10240.0/um/WinNls.h
+//
+
+#ifndef LOCALE_SLANGDISPLAYNAME
+#define LOCALE_SLANGDISPLAYNAME			0x0000006f		// Language Display Name for a language, eg "German" in UI language
+#endif
+#ifndef LOCALE_IDIALINGCODE
+#define LOCALE_IDIALINGCODE				0x00000005		// country/region dialing code, example: en-US and en-CA return 1.
+#endif
+
+#ifndef LOCALE_SNAME
+#define LOCALE_SNAME					0x0000005c		// locale name (ie: en-us)
+#endif
+#ifndef LOCALE_SDURATION
+#define LOCALE_SDURATION				0x0000005d		// time duration format, eg "hh:mm:ss"
+#endif
+#ifndef LOCALE_SKEYBOARDSTOINSTALL
+#define LOCALE_SKEYBOARDSTOINSTALL		0x0000005e		// Used internally, see GetKeyboardLayoutName() function
+#endif
+#ifndef LOCALE_SSHORTESTDAYNAME1
+#define LOCALE_SSHORTESTDAYNAME1		0x00000060		// Shortest day name for Monday
+#endif
+#ifndef LOCALE_SSHORTESTDAYNAME2
+#define LOCALE_SSHORTESTDAYNAME2		0x00000061		// Shortest day name for Tuesday
+#endif
+#ifndef LOCALE_SSHORTESTDAYNAME3
+#define LOCALE_SSHORTESTDAYNAME3		0x00000062		// Shortest day name for Wednesday
+#endif
+#ifndef LOCALE_SSHORTESTDAYNAME4
+#define LOCALE_SSHORTESTDAYNAME4		0x00000063		// Shortest day name for Thursday
+#endif
+#ifndef LOCALE_SSHORTESTDAYNAME5
+#define LOCALE_SSHORTESTDAYNAME5		0x00000064		// Shortest day name for Friday
+#endif
+#ifndef LOCALE_SSHORTESTDAYNAME6
+#define LOCALE_SSHORTESTDAYNAME6		0x00000065		// Shortest day name for Saturday
+#endif
+#ifndef LOCALE_SSHORTESTDAYNAME7
+#define LOCALE_SSHORTESTDAYNAME7		0x00000066		// Shortest day name for Sunday
+#endif
+#ifndef LOCALE_SISO639LANGNAME2
+#define LOCALE_SISO639LANGNAME2			0x00000067		// 3 character ISO abbreviated language name, eg "eng"
+#endif
+#ifndef LOCALE_SISO3166CTRYNAME2
+#define LOCALE_SISO3166CTRYNAME2		0x00000068		// 3 character ISO country/region name, eg "USA"
+#endif
+#ifndef LOCALE_SNAN
+#define LOCALE_SNAN						0x00000069		// Not a Number, eg "NaN"
+#endif
+#ifndef LOCALE_SPOSINFINITY
+#define LOCALE_SPOSINFINITY				0x0000006a		// + Infinity, eg "infinity"
+#endif
+#ifndef LOCALE_SNEGINFINITY
+#define LOCALE_SNEGINFINITY				0x0000006b		// - Infinity, eg "-infinity"
+#endif
+#ifndef LOCALE_SSCRIPTS
+#define LOCALE_SSCRIPTS					0x0000006c		// Typical scripts in the locale: ; delimited script codes, eg "Latn;"
+#endif
+#ifndef LOCALE_SPARENT
+#define LOCALE_SPARENT					0x0000006d		// Fallback name for resources, eg "en" for "en-US"
+#endif
+#ifndef LOCALE_SCONSOLEFALLBACKNAME
+#define LOCALE_SCONSOLEFALLBACKNAME		0x0000006e		// Fallback name for within the console for Unicode Only locales, eg "en" for bn-IN
+#endif
+#ifndef LOCALE_IREADINGLAYOUT
+#define LOCALE_IREADINGLAYOUT			0x00000070		// Returns one of the following 4 reading layout values:
+														// 0 - Left to right (eg en-US)
+														// 1 - Right to left (eg arabic locales)
+														// 2 - Vertical top to bottom with columns to the left and also left to right (ja-JP locales)
+														// 3 - Vertical top to bottom with columns proceeding to the right
+#endif
+#ifndef LOCALE_INEUTRAL
+#define LOCALE_INEUTRAL					0x00000071		// Returns 0 for specific cultures, 1 for neutral cultures.
+#endif
+#ifndef LOCALE_INEGATIVEPERCENT
+#define LOCALE_INEGATIVEPERCENT			0x00000074		// Returns 0-11 for the negative percent format
+#endif
+#ifndef LOCALE_IPOSITIVEPERCENT
+#define LOCALE_IPOSITIVEPERCENT			0x00000075		// Returns 0-3 for the positive percent formatIPOSITIVEPERCENT
+#endif
+#ifndef LOCALE_SPERCENT
+#define LOCALE_SPERCENT					0x00000076		// Returns the percent symbol
+#endif
+#ifndef LOCALE_SPERMILLE
+#define LOCALE_SPERMILLE				0x00000077		// Returns the permille (U+2030) symbol
+#endif
+#ifndef LOCALE_SMONTHDAY
+#define LOCALE_SMONTHDAY				0x00000078		// Returns the preferred month/day format
+#endif
+#ifndef LOCALE_SSHORTTIME
+#define LOCALE_SSHORTTIME				0x00000079		// Returns the preferred short time format (ie: no seconds, just h:mm)
+#endif
+#ifndef LOCALE_SOPENTYPELANGUAGETAG
+#define LOCALE_SOPENTYPELANGUAGETAG		0x0000007a		// Open type language tag, eg: "latn" or "dflt"
+#endif
+#ifndef LOCALE_SSORTLOCALE
+#define LOCALE_SSORTLOCALE				0x0000007b		// Name of locale to use for sorting/collation/casing behavior.
+#endif
+#ifndef LOCALE_SSHORTESTAM
+#define LOCALE_SSHORTESTAM				0x0000007e		// Shortest AM designator, eg "A"
+#endif
+#ifndef LOCALE_SSHORTESTPM
+#define LOCALE_SSHORTESTPM				0x0000007f		// Shortest PM designator, eg "P"
+#endif
+
+
+class ClipboardHandlerLocale : public ClipboardHandler
+{
+public:
+	ClipboardHandlerLocale() : ClipboardHandler()
+	{
+	}
+	~ClipboardHandlerLocale()
+	{
+	}
+public:
+	virtual QVariant	read(IDataObject* pDataObj, const QString& formatName)
+	{
+		if(formatName == "CF_LOCALE")
+		{
+			QByteArray data = GetData(CF_LOCALE, pDataObj);
+			if(data.size() == 4)
+			{
+				QString s;
+				LCID* locale = (LCID*)data.constData();
+				WCHAR lcData[128];
+
+#define DEF_ARRAY_ITEM(type)	{ type, #type },
+				struct
+				{
+					LCTYPE type;
+					const char* name;
+				} array[] =
+				{
+					DEF_ARRAY_ITEM(LOCALE_SLANGUAGE)
+
+					DEF_ARRAY_ITEM(LOCALE_SLANGDISPLAYNAME)
+
+					DEF_ARRAY_ITEM(LOCALE_SENGLANGUAGE)
+					DEF_ARRAY_ITEM(LOCALE_SNATIVELANGNAME)
+					DEF_ARRAY_ITEM(LOCALE_SCOUNTRY)
+					DEF_ARRAY_ITEM(LOCALE_SENGCOUNTRY)
+					DEF_ARRAY_ITEM(LOCALE_SNATIVECTRYNAME)
+
+					DEF_ARRAY_ITEM(LOCALE_ILANGUAGE)
+
+					DEF_ARRAY_ITEM(LOCALE_SABBREVLANGNAME)
+
+					DEF_ARRAY_ITEM(LOCALE_IDIALINGCODE)
+					DEF_ARRAY_ITEM(LOCALE_ICOUNTRY)
+					DEF_ARRAY_ITEM(LOCALE_SABBREVCTRYNAME)
+					DEF_ARRAY_ITEM(LOCALE_IGEOID)
+
+					DEF_ARRAY_ITEM(LOCALE_IDEFAULTLANGUAGE)
+					DEF_ARRAY_ITEM(LOCALE_IDEFAULTCOUNTRY)
+					DEF_ARRAY_ITEM(LOCALE_IDEFAULTCODEPAGE)
+					DEF_ARRAY_ITEM(LOCALE_IDEFAULTANSICODEPAGE)
+					DEF_ARRAY_ITEM(LOCALE_IDEFAULTMACCODEPAGE)
+
+					DEF_ARRAY_ITEM(LOCALE_SLIST)
+					DEF_ARRAY_ITEM(LOCALE_IMEASURE)
+
+					DEF_ARRAY_ITEM(LOCALE_SDECIMAL)
+					DEF_ARRAY_ITEM(LOCALE_STHOUSAND)
+					DEF_ARRAY_ITEM(LOCALE_SGROUPING)
+					DEF_ARRAY_ITEM(LOCALE_IDIGITS)
+					DEF_ARRAY_ITEM(LOCALE_ILZERO)
+					DEF_ARRAY_ITEM(LOCALE_INEGNUMBER)
+					DEF_ARRAY_ITEM(LOCALE_SNATIVEDIGITS)
+
+					DEF_ARRAY_ITEM(LOCALE_SCURRENCY)
+					DEF_ARRAY_ITEM(LOCALE_SINTLSYMBOL)
+					DEF_ARRAY_ITEM(LOCALE_SMONDECIMALSEP)
+					DEF_ARRAY_ITEM(LOCALE_SMONTHOUSANDSEP)
+					DEF_ARRAY_ITEM(LOCALE_SMONGROUPING)
+					DEF_ARRAY_ITEM(LOCALE_ICURRDIGITS)
+					DEF_ARRAY_ITEM(LOCALE_IINTLCURRDIGITS)
+					DEF_ARRAY_ITEM(LOCALE_ICURRENCY)
+					DEF_ARRAY_ITEM(LOCALE_INEGCURR)
+
+					DEF_ARRAY_ITEM(LOCALE_SDATE)
+					DEF_ARRAY_ITEM(LOCALE_STIME)
+					DEF_ARRAY_ITEM(LOCALE_SSHORTDATE)
+					DEF_ARRAY_ITEM(LOCALE_SLONGDATE)
+					DEF_ARRAY_ITEM(LOCALE_STIMEFORMAT)
+					DEF_ARRAY_ITEM(LOCALE_IDATE)
+					DEF_ARRAY_ITEM(LOCALE_ILDATE)
+					DEF_ARRAY_ITEM(LOCALE_ITIME)
+					DEF_ARRAY_ITEM(LOCALE_ITIMEMARKPOSN)
+					DEF_ARRAY_ITEM(LOCALE_ICENTURY)
+					DEF_ARRAY_ITEM(LOCALE_ITLZERO)
+					DEF_ARRAY_ITEM(LOCALE_IDAYLZERO)
+					DEF_ARRAY_ITEM(LOCALE_IMONLZERO)
+					// DEF_ARRAY_ITEM(LOCALE_SAM)	// LOCALE_S1159
+					DEF_ARRAY_ITEM(LOCALE_S1159)
+					// DEF_ARRAY_ITEM(LOCALE_SPM)		// LOCALE_S2359
+					DEF_ARRAY_ITEM(LOCALE_S2359)
+
+					DEF_ARRAY_ITEM(LOCALE_ICALENDARTYPE)
+					DEF_ARRAY_ITEM(LOCALE_IOPTIONALCALENDAR)
+					DEF_ARRAY_ITEM(LOCALE_IFIRSTDAYOFWEEK)
+					DEF_ARRAY_ITEM(LOCALE_IFIRSTWEEKOFYEAR)
+
+					DEF_ARRAY_ITEM(LOCALE_SDAYNAME1)
+					DEF_ARRAY_ITEM(LOCALE_SDAYNAME2)
+					DEF_ARRAY_ITEM(LOCALE_SDAYNAME3)
+					DEF_ARRAY_ITEM(LOCALE_SDAYNAME4)
+					DEF_ARRAY_ITEM(LOCALE_SDAYNAME5)
+					DEF_ARRAY_ITEM(LOCALE_SDAYNAME6)
+					DEF_ARRAY_ITEM(LOCALE_SDAYNAME7)
+					DEF_ARRAY_ITEM(LOCALE_SABBREVDAYNAME1)
+					DEF_ARRAY_ITEM(LOCALE_SABBREVDAYNAME2)
+					DEF_ARRAY_ITEM(LOCALE_SABBREVDAYNAME3)
+					DEF_ARRAY_ITEM(LOCALE_SABBREVDAYNAME4)
+					DEF_ARRAY_ITEM(LOCALE_SABBREVDAYNAME5)
+					DEF_ARRAY_ITEM(LOCALE_SABBREVDAYNAME6)
+					DEF_ARRAY_ITEM(LOCALE_SABBREVDAYNAME7)
+					DEF_ARRAY_ITEM(LOCALE_SMONTHNAME1)
+					DEF_ARRAY_ITEM(LOCALE_SMONTHNAME2)
+					DEF_ARRAY_ITEM(LOCALE_SMONTHNAME3)
+					DEF_ARRAY_ITEM(LOCALE_SMONTHNAME4)
+					DEF_ARRAY_ITEM(LOCALE_SMONTHNAME5)
+					DEF_ARRAY_ITEM(LOCALE_SMONTHNAME6)
+					DEF_ARRAY_ITEM(LOCALE_SMONTHNAME7)
+					DEF_ARRAY_ITEM(LOCALE_SMONTHNAME8)
+					DEF_ARRAY_ITEM(LOCALE_SMONTHNAME9)
+					DEF_ARRAY_ITEM(LOCALE_SMONTHNAME10)
+					DEF_ARRAY_ITEM(LOCALE_SMONTHNAME11)
+					DEF_ARRAY_ITEM(LOCALE_SMONTHNAME12)
+					DEF_ARRAY_ITEM(LOCALE_SMONTHNAME13)
+					DEF_ARRAY_ITEM(LOCALE_SABBREVMONTHNAME1)
+					DEF_ARRAY_ITEM(LOCALE_SABBREVMONTHNAME2)
+					DEF_ARRAY_ITEM(LOCALE_SABBREVMONTHNAME3)
+					DEF_ARRAY_ITEM(LOCALE_SABBREVMONTHNAME4)
+					DEF_ARRAY_ITEM(LOCALE_SABBREVMONTHNAME5)
+					DEF_ARRAY_ITEM(LOCALE_SABBREVMONTHNAME6)
+					DEF_ARRAY_ITEM(LOCALE_SABBREVMONTHNAME7)
+					DEF_ARRAY_ITEM(LOCALE_SABBREVMONTHNAME8)
+					DEF_ARRAY_ITEM(LOCALE_SABBREVMONTHNAME9)
+					DEF_ARRAY_ITEM(LOCALE_SABBREVMONTHNAME10)
+					DEF_ARRAY_ITEM(LOCALE_SABBREVMONTHNAME11)
+					DEF_ARRAY_ITEM(LOCALE_SABBREVMONTHNAME12)
+					DEF_ARRAY_ITEM(LOCALE_SABBREVMONTHNAME13)
+
+					DEF_ARRAY_ITEM(LOCALE_SPOSITIVESIGN)
+					DEF_ARRAY_ITEM(LOCALE_SNEGATIVESIGN)
+					DEF_ARRAY_ITEM(LOCALE_IPOSSIGNPOSN)
+					DEF_ARRAY_ITEM(LOCALE_INEGSIGNPOSN)
+					DEF_ARRAY_ITEM(LOCALE_IPOSSYMPRECEDES)
+					DEF_ARRAY_ITEM(LOCALE_IPOSSEPBYSPACE)
+					DEF_ARRAY_ITEM(LOCALE_INEGSYMPRECEDES)
+					DEF_ARRAY_ITEM(LOCALE_INEGSEPBYSPACE)
+
+					DEF_ARRAY_ITEM(LOCALE_FONTSIGNATURE)
+					DEF_ARRAY_ITEM(LOCALE_SISO639LANGNAME)
+					DEF_ARRAY_ITEM(LOCALE_SISO3166CTRYNAME)
+
+					DEF_ARRAY_ITEM(LOCALE_IDEFAULTEBCDICCODEPAGE)
+					DEF_ARRAY_ITEM(LOCALE_IPAPERSIZE)
+					DEF_ARRAY_ITEM(LOCALE_SENGCURRNAME)
+					DEF_ARRAY_ITEM(LOCALE_SNATIVECURRNAME)
+					DEF_ARRAY_ITEM(LOCALE_SYEARMONTH)
+					DEF_ARRAY_ITEM(LOCALE_SSORTNAME)
+					DEF_ARRAY_ITEM(LOCALE_IDIGITSUBSTITUTION)
+
+					DEF_ARRAY_ITEM(LOCALE_SNAME)
+					DEF_ARRAY_ITEM(LOCALE_SDURATION)
+					DEF_ARRAY_ITEM(LOCALE_SKEYBOARDSTOINSTALL)
+					DEF_ARRAY_ITEM(LOCALE_SSHORTESTDAYNAME1)
+					DEF_ARRAY_ITEM(LOCALE_SSHORTESTDAYNAME2)
+					DEF_ARRAY_ITEM(LOCALE_SSHORTESTDAYNAME3)
+					DEF_ARRAY_ITEM(LOCALE_SSHORTESTDAYNAME4)
+					DEF_ARRAY_ITEM(LOCALE_SSHORTESTDAYNAME5)
+					DEF_ARRAY_ITEM(LOCALE_SSHORTESTDAYNAME6)
+					DEF_ARRAY_ITEM(LOCALE_SSHORTESTDAYNAME7)
+					DEF_ARRAY_ITEM(LOCALE_SISO639LANGNAME2)
+					DEF_ARRAY_ITEM(LOCALE_SISO3166CTRYNAME2)
+					DEF_ARRAY_ITEM(LOCALE_SNAN)
+					DEF_ARRAY_ITEM(LOCALE_SPOSINFINITY)
+					DEF_ARRAY_ITEM(LOCALE_SNEGINFINITY)
+					DEF_ARRAY_ITEM(LOCALE_SSCRIPTS)
+					DEF_ARRAY_ITEM(LOCALE_SPARENT)
+					DEF_ARRAY_ITEM(LOCALE_SCONSOLEFALLBACKNAME)
+
+					DEF_ARRAY_ITEM(LOCALE_IREADINGLAYOUT)
+
+					DEF_ARRAY_ITEM(LOCALE_INEUTRAL)
+					DEF_ARRAY_ITEM(LOCALE_INEGATIVEPERCENT)
+					DEF_ARRAY_ITEM(LOCALE_IPOSITIVEPERCENT)
+					DEF_ARRAY_ITEM(LOCALE_SPERCENT)
+					DEF_ARRAY_ITEM(LOCALE_SPERMILLE)
+					DEF_ARRAY_ITEM(LOCALE_SMONTHDAY)
+					DEF_ARRAY_ITEM(LOCALE_SSHORTTIME)
+					DEF_ARRAY_ITEM(LOCALE_SOPENTYPELANGUAGETAG)
+					DEF_ARRAY_ITEM(LOCALE_SSORTLOCALE)
+
+
+					DEF_ARRAY_ITEM(LOCALE_SSHORTESTAM)
+					DEF_ARRAY_ITEM(LOCALE_SSHORTESTPM)
+
+				};
+				//
+				s += "Locale:\n";
+				s += QString().sprintf("    Code: %04X\n", *locale);
+
+				for(unsigned int i = 0; i < sizeof(array)/sizeof(array[0]); i++)
+				{
+					lcData[0] = 0;
+					int ret = GetLocaleInfoW(*locale, array[i].type, lcData, sizeof(lcData) / sizeof(WCHAR));
+					if(ret != 0)
+						s += QString().sprintf("    %-32s %ls\n", array[i].name, lcData);
+				}
+
+				return s;
+			}
+		}
+		return QVariant();
+	}
+	virtual bool		canRead(IDataObject* pDataObj, const QString& formatName)
+	{
+		if(formatName == "CF_LOCALE")
+		{
+			return CanGetData(CF_LOCALE, pDataObj);
+		}
+		return false;
+	}
+	virtual QWidget*	getWidget(IDataObject* pDataObj, const QString& formatName)
+	{
+		QVariant var = read(pDataObj, formatName);
+		if(!var.isNull())
+		{
+			QTextEdit* edit = new QTextEdit();
+			edit->setReadOnly(true);
+			edit->setText(var.toString());
+			edit->setFont(QFont("Courier New"));
+			return edit;
+		}
+		return NULL;
+	}
+};
+static ClipboardHandlerLocale s_ClipboardHandlerLocale;
+
+
+#endif

@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>573</width>
+    <height>421</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Clipboard Viewer</string>
+  </property>
+  <widget class="QWidget" name="centralWidget">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
+     <number>0</number>
+    </property>
+    <item>
+     <widget class="QTreeWidget" name="treeWidget">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="contextMenuPolicy">
+       <enum>Qt::CustomContextMenu</enum>
+      </property>
+      <property name="rootIsDecorated">
+       <bool>true</bool>
+      </property>
+      <column>
+       <property name="text">
+        <string notr="true">cfFormat</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>ptd</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>dwAspect</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>lindex</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>tymed</string>
+       </property>
+      </column>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menuBar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>573</width>
+     <height>26</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menu_File">
+    <property name="title">
+     <string>&amp;Program</string>
+    </property>
+    <addaction name="actionProgramClear"/>
+    <addaction name="separator"/>
+    <addaction name="actionProgramRefresh"/>
+    <addaction name="separator"/>
+    <addaction name="actionProgramExit"/>
+   </widget>
+   <widget class="QMenu" name="menu_Help">
+    <property name="title">
+     <string>&amp;Help</string>
+    </property>
+    <addaction name="actionHelpAbout"/>
+   </widget>
+   <widget class="QMenu" name="menu_Options">
+    <property name="title">
+     <string>&amp;Options</string>
+    </property>
+    <widget class="QMenu" name="menu_Languages">
+     <property name="title">
+      <string>&amp;Languages</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../res/resource.qrc">
+       <normaloff>:/menu-languages.png</normaloff>:/menu-languages.png</iconset>
+     </property>
+    </widget>
+    <addaction name="menu_Languages"/>
+    <addaction name="separator"/>
+    <addaction name="actionOptionsAutoRefresh"/>
+   </widget>
+   <widget class="QMenu" name="menu_View">
+    <property name="title">
+     <string>&amp;View</string>
+    </property>
+   </widget>
+   <addaction name="menu_File"/>
+   <addaction name="menu_View"/>
+   <addaction name="menu_Options"/>
+   <addaction name="menu_Help"/>
+  </widget>
+  <widget class="QStatusBar" name="statusBar"/>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
+    <string>Tool bar</string>
+   </property>
+   <property name="floatable">
+    <bool>true</bool>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionProgramRefresh"/>
+   <addaction name="actionOptionsAutoRefresh"/>
+   <addaction name="separator"/>
+   <addaction name="actionProgramClear"/>
+  </widget>
+  <action name="actionProgramRefresh">
+   <property name="icon">
+    <iconset resource="../res/resource.qrc">
+     <normaloff>:/action-refresh.png</normaloff>:/action-refresh.png</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Refresh</string>
+   </property>
+   <property name="shortcut">
+    <string>F5</string>
+   </property>
+  </action>
+  <action name="actionProgramExit">
+   <property name="icon">
+    <iconset resource="../res/resource.qrc">
+     <normaloff>:/file-exit.png</normaloff>:/file-exit.png</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Exit</string>
+   </property>
+  </action>
+  <action name="actionProgramClear">
+   <property name="icon">
+    <iconset resource="../res/resource.qrc">
+     <normaloff>:/action-clear.png</normaloff>:/action-clear.png</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Clear</string>
+   </property>
+  </action>
+  <action name="actionHelpAbout">
+   <property name="icon">
+    <iconset resource="../res/resource.qrc">
+     <normaloff>:/help-about.png</normaloff>:/help-about.png</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;About</string>
+   </property>
+  </action>
+  <action name="actionOptionsAutoRefresh">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../res/resource.qrc">
+     <normaloff>:/action-auto-refresh.png</normaloff>:/action-auto-refresh.png</iconset>
+   </property>
+   <property name="text">
+    <string>Update automatically</string>
+   </property>
+  </action>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <resources>
+  <include location="../res/resource.qrc"/>
+ </resources>
+ <connections>
+  <connection>
+   <sender>treeWidget</sender>
+   <signal>itemDoubleClicked(QTreeWidgetItem*,int)</signal>
+   <receiver>MainWindow</receiver>
+   <slot>slotTreeWidget_itemDoubleClicked(QTreeWidgetItem*,int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>190</x>
+     <y>136</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>199</x>
+     <y>149</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>treeWidget</sender>
+   <signal>customContextMenuRequested(QPoint)</signal>
+   <receiver>MainWindow</receiver>
+   <slot>slotTreeWidget_customContextMenuRequested(QPoint)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>286</x>
+     <y>227</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>286</x>
+     <y>210</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>slotActionFile()</slot>
+  <slot>slotActionEdit()</slot>
+  <slot>slotActionHelp()</slot>
+  <slot>slotTreeWidget_itemDoubleClicked(QTreeWidgetItem*,int)</slot>
+  <slot>slotTreeWidget_customContextMenuRequested(QPoint)</slot>
+ </slots>
+</ui>
