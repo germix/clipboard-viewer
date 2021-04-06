@@ -25,30 +25,6 @@ void Languages::load(QString language)
 
 		loadTranslator(&qtTranslator, QString("qt_%1.qm").arg(language));
 		loadTranslator(&appTranslator, QString(baseName + "_%1.qm").arg(language));
-
-		//QString languageName = QLocale::languageToString(locale.language());
-		/*
-		QString fileName = languagesPath + "/" + QString(baseName + "_%1.qm").arg(language);
-
-		// Remover el viejo traductor
-		qApp->removeTranslator(&currentTranslator);
-
-		// Cargar el nuevo traductor
-		if(currentTranslator.load(fileName))
-		{
-			qApp->installTranslator(&currentTranslator);
-		}
-		else
-		{
-			// TODO: ¿Notificar error?
-		}
-
-		if(qtTranslator.load(languagesPath + QString("/qt_%1.qm").arg(language)))
-		{
-			qDebug("cccccccccccccccccccc");
-			qApp->installTranslator(&qtTranslator);
-		}
-		*/
 	}
 }
 void Languages::init(QMenu* menu, QString basePath, QString baseName, QString initialLocale)
@@ -72,7 +48,7 @@ void Languages::init(QMenu* menu, QString basePath, QString baseName, QString in
 	}
 
 	//
-	// Obtener la carpeta de donde están los lenguajes
+	// Obtener la carpeta de donde estï¿½n los lenguajes
 	//
 	languagesPath = QApplication::applicationDirPath();
 	if(!basePath.isEmpty() && (basePath.at(0) != '/' && basePath.at(0) != '\\'))
@@ -88,7 +64,7 @@ void Languages::init(QMenu* menu, QString basePath, QString baseName, QString in
 	QStringList fileNames = dir.entryList(QStringList(baseName + "_*.qm"));
 
 	//
-	// Enumarar cada uno e ir creando una acción para ir agregandola al menú
+	// Enumarar cada uno e ir creando una acciï¿½n para ir agregandola al menï¿½
 	//
 	for(int i = 0; i < fileNames.size(); i++)
 	{
@@ -131,7 +107,7 @@ void Languages::loadTranslator(QTranslator* t, const QString& fname)
 	}
 	else
 	{
-		// TODO: ¿Notificar error?
+		// TODO: ï¿½Notificar error?
 		qDebug() << QString("Can't load \"%1\" translator.").arg(fname);
 	}
 
